@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
-import { Table, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
+import { Card, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
 import { chiamataApi } from "../api/api.js";
 
 function ClientiPage() {
-  // Lista dei clienti della pagina corrente
   const [clienti, setClienti] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [totalePagine, setTotalePagine] = useState(0);
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState(null);
 
-  // Stato dei filtri e dell'ordinamento
   const [nome, setNome] = useState("");
   const [minFatturato, setMinFatturato] = useState("");
   const [maxFatturato, setMaxFatturato] = useState("");
@@ -18,18 +16,15 @@ function ClientiPage() {
   const [dataUltimoContatto, setDataUltimoContatto] = useState("");
   const [sortBy, setSortBy] = useState("ragioneSociale");
 
-  // Carico i clienti dal backend, costruendo la query con i filtri attivi
   async function caricaClienti(paginaDaCaricare) {
     try {
       setCaricamento(true);
       setErrore(null);
 
-      // URLSearchParams costruisce la stringa "?page=0&size=10&..." per me
       const params = new URLSearchParams();
       params.append("page", paginaDaCaricare);
       params.append("size", "10");
       params.append("sortBy", sortBy);
-      // Aggiungo un filtro solo se è stato compilato
       if (nome) params.append("nome", nome);
       if (minFatturato) params.append("minFatturato", minFatturato);
       if (maxFatturato) params.append("maxFatturato", maxFatturato);
@@ -46,18 +41,15 @@ function ClientiPage() {
     }
   }
 
-  // Ricarico ogni volta che cambia la pagina
   useEffect(() => {
     caricaClienti(pagina);
   }, [pagina]);
 
-  // Quando premo "Filtra": torno a pagina 0 e ricarico con i filtri
   function applicaFiltri() {
     setPagina(0);
     caricaClienti(0);
   }
 
-  // Azzera tutti i filtri e ricarica la lista pulita
   function azzeraFiltri() {
     setNome("");
     setMinFatturato("");
@@ -68,11 +60,22 @@ function ClientiPage() {
     setPagina(0);
   }
 
+  async function eliminaCliente(id) {
+    const conferma = window.confirm("Sei sicura di voler eliminare questo cliente?");
+    if (!conferma) return;
+
+    try {
+      await chiamataApi("/clienti/" + id, { metodo: "DELETE" });
+      caricaClienti(pagina);
+    } catch (err) {
+      setErrore("Impossibile eliminare il cliente.");
+    }
+  }
+
   return (
     <div className="container mt-4">
       <h2 className="mb-4">Clienti</h2>
 
-      {/* Sezione filtri */}
       <Form className="mb-4 p-3 border rounded bg-light">
         <Row className="g-3">
           <Col md={4}>
@@ -142,46 +145,68 @@ function ClientiPage() {
 
       {!caricamento && !errore && (
         <>
-          <Table striped bordered hover responsive>
-            <thead>
-              <tr>
-                <th>Ragione sociale</th>
-                <th>Partita IVA</th>
-                <th>Email</th>
-                <th>Fatturato annuale</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clienti.map((cliente) => (
-                <tr key={cliente.id}>
-                  <td>{cliente.ragioneSociale}</td>
-                  <td>{cliente.partitaIva}</td>
-                  <td>{cliente.email}</td>
-                  <td>{cliente.fatturatoAnnuale}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          {clienti.length === 0 ? (
+            <Alert variant="info">Nessun cliente trovato.</Alert>
+          ) : (
+            <>
+              {/* Griglia di card: 1 colonna su mobile, 2 su tablet, 3 su desktop */}
+              <Row xs={1} md={2} lg={3} className="g-4">
+                {clienti.map((cliente) => (
+                  <Col key={cliente.id}>
+                    <Card className="h-100 shadow-sm">
+                      <Card.Img
+                        variant="top"
+                        src={cliente.logoAziendale}
+                        className="p-3 bg-light"
+                        style={{ height: "160px", objectFit: "contain" }}
+                      />
+                      <Card.Body className="d-flex flex-column">
+                        <Card.Title>{cliente.ragioneSociale}</Card.Title>
+                        <Card.Subtitle className="mb-2 text-muted">
+                          P.IVA: {cliente.partitaIva}
+                        </Card.Subtitle>
+                        <Card.Text as="div">
+                          <div>{cliente.email}</div>
+                          <div>
+                            <strong>Fatturato:</strong> € {cliente.fatturatoAnnuale}
+                          </div>
+                        </Card.Text>
+                        {/* mt-auto spinge il pulsante in fondo alla card */}
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          className="mt-auto"
+                          onClick={() => eliminaCliente(cliente.id)}
+                        >
+                          Elimina
+                        </Button>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
 
-          <div className="d-flex justify-content-between align-items-center">
-            <Button
-              variant="secondary"
-              disabled={pagina === 0}
-              onClick={() => setPagina(pagina - 1)}
-            >
-              Precedente
-            </Button>
-            <span>
-              Pagina {pagina + 1} di {totalePagine}
-            </span>
-            <Button
-              variant="secondary"
-              disabled={pagina + 1 >= totalePagine}
-              onClick={() => setPagina(pagina + 1)}
-            >
-              Successiva
-            </Button>
-          </div>
+              <div className="d-flex justify-content-between align-items-center mt-4">
+                <Button
+                  variant="secondary"
+                  disabled={pagina === 0}
+                  onClick={() => setPagina(pagina - 1)}
+                >
+                  Precedente
+                </Button>
+                <span>
+                  Pagina {pagina + 1} di {totalePagine}
+                </span>
+                <Button
+                  variant="secondary"
+                  disabled={pagina + 1 >= totalePagine}
+                  onClick={() => setPagina(pagina + 1)}
+                >
+                  Successiva
+                </Button>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
