@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
 import { chiamataApi } from "../api/api.js";
+import InviaEmailModal from "../components/InviaEmailModal.jsx";
 
 function ClientiPage() {
   const [clienti, setClienti] = useState([]);
@@ -172,14 +173,16 @@ function ClientiPage() {
                           </div>
                         </Card.Text>
                         {/* mt-auto spinge il pulsante in fondo alla card */}
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          className="mt-auto"
-                          onClick={() => eliminaCliente(cliente.id)}
-                        >
-                          Elimina
-                        </Button>
+                        <div className="mt-auto d-flex gap-2">
+                          <InviaEmailModal clienteId={cliente.id} />
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => eliminaCliente(cliente.id)}
+                          >
+                            Elimina
+                          </Button>
+                        </div>
                       </Card.Body>
                     </Card>
                   </Col>
