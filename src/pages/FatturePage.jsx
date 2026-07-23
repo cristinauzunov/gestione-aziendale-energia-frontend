@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Table, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
 import { chiamataApi } from "../api/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 function FatturePage() {
+  const { token } = useAuth();
+
   const [fatture, setFatture] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [totalePagine, setTotalePagine] = useState(0);
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState(null);
 
-  // Stato dei filtri (quelli che il backend accetta)
   const [stato, setStato] = useState("");
   const [data, setData] = useState("");
   const [anno, setAnno] = useState("");
@@ -30,11 +32,15 @@ function FatturePage() {
       if (minImporto) params.append("minImporto", minImporto);
       if (maxImporto) params.append("maxImporto", maxImporto);
 
-      const dati = await chiamataApi("/fatture?" + params.toString());
+      const dati = await chiamataApi("/fatture?" + params.toString(), {
+        token,
+      });
       setFatture(dati.content);
       setTotalePagine(dati.totalPages);
     } catch (err) {
-      setErrore("Impossibile caricare le fatture. Controlla che il backend sia avviato.");
+      setErrore(
+        "Impossibile caricare le fatture. Controlla di aver effettuato il login.",
+      );
     } finally {
       setCaricamento(false);
     }
@@ -123,50 +129,54 @@ function FatturePage() {
 
       {!caricamento && !errore && (
         <>
-          <Table striped bordered hover responsive>
-            <thead>
-              <tr>
-                <th>Numero</th>
-                <th>Data</th>
-                <th>Importo</th>
-                <th>Cliente</th>
-                <th>Stato</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fatture.map((fattura) => (
-                <tr key={fattura.id}>
-                  <td>{fattura.numero}</td>
-                  <td>{fattura.data}</td>
-                  <td>{fattura.importo}</td>
-                  {/* cliente è un oggetto: mostro la ragione sociale */}
-                  <td>{fattura.cliente.ragioneSociale}</td>
-                  {/* statoFattura è un oggetto: mostro il nome (verifica il campo!) */}
-                  <td>{fattura.statoFattura.nome}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          {fatture.length === 0 ? (
+            <Alert variant="info">Nessuna fattura trovata.</Alert>
+          ) : (
+            <>
+              <Table striped bordered hover responsive>
+                <thead>
+                  <tr>
+                    <th>Numero</th>
+                    <th>Data</th>
+                    <th>Importo</th>
+                    <th>Cliente</th>
+                    <th>Stato</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fatture.map((fattura) => (
+                    <tr key={fattura.id}>
+                      <td>{fattura.numero}</td>
+                      <td>{fattura.data}</td>
+                      <td>€ {fattura.importo}</td>
+                      <td>{fattura.cliente.ragioneSociale}</td>
+                      <td>{fattura.statoFattura.nome}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
 
-          <div className="d-flex justify-content-between align-items-center">
-            <Button
-              variant="secondary"
-              disabled={pagina === 0}
-              onClick={() => setPagina(pagina - 1)}
-            >
-              Precedente
-            </Button>
-            <span>
-              Pagina {pagina + 1} di {totalePagine}
-            </span>
-            <Button
-              variant="secondary"
-              disabled={pagina + 1 >= totalePagine}
-              onClick={() => setPagina(pagina + 1)}
-            >
-              Successiva
-            </Button>
-          </div>
+              <div className="d-flex justify-content-between align-items-center">
+                <Button
+                  variant="secondary"
+                  disabled={pagina === 0}
+                  onClick={() => setPagina(pagina - 1)}
+                >
+                  Precedente
+                </Button>
+                <span>
+                  Pagina {pagina + 1} di {totalePagine}
+                </span>
+                <Button
+                  variant="secondary"
+                  disabled={pagina + 1 >= totalePagine}
+                  onClick={() => setPagina(pagina + 1)}
+                >
+                  Successiva
+                </Button>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

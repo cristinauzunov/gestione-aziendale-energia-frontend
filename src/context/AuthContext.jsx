@@ -7,7 +7,6 @@ const AuthContext = createContext();
 // Provider che avvolge tutta l'app e tiene token + utente
 
 export function AuthProvider({ children }) {
-
   // Leggo dal localStorage all'avvio: così dopo un refresh resto loggata
 
   const [token, setToken] = useState(localStorage.getItem("token") || null);
@@ -38,7 +37,7 @@ export function AuthProvider({ children }) {
 
   const isAdmin =
     utente && utente.ruoli
-      ? utente.ruoli.some((ruolo) => ruolo.nome === "ADMIN")
+      ? utente.ruoli.some((ruolo) => ruolo.nome === "ROLE_ADMIN")
       : false;
 
   return (

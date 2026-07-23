@@ -1,28 +1,25 @@
 import { useState } from "react";
-import { Modal, Button, Form, Alert} from "react-bootstrap";
-import { chiamataApi} from "../api/api.js";
+import { Modal, Button, Form, Alert } from "react-bootstrap";
+import { chiamataApi } from "../api/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
-// ricevo l'id del cliente a cui inviare la mal 
-function InviaEmailModal ({ clienteid}) {
-    //controllo se la finestra modale e aperta
-    const [aperto, setAperto] =useState (false);
-    //i due campi dell'email
-    const [subject, setSubject] = useState("");
-    const [body, setBody] = useState("");
-    //messaggi di esito
-    const [esito, setEsito] = useState (null);
+function InviaEmailModal({ clienteId }) {
+  const { token } = useAuth();
 
+  const [aperto, setAperto] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [esito, setEsito] = useState(null);
 
-    //invia l'email chiamando il backend
-    async function inviaEmail() {
+  async function inviaEmail() {
     try {
       setEsito(null);
       await chiamataApi("/clienti/" + clienteId + "/send-email", {
         metodo: "POST",
         body: { subject: subject, body: body },
+        token: token,
       });
       setEsito({ tipo: "success", testo: "Email inviata con successo!" });
-      // Svuoto i campi dopo l'invio
       setSubject("");
       setBody("");
     } catch (err) {
@@ -32,7 +29,6 @@ function InviaEmailModal ({ clienteid}) {
 
   return (
     <>
-      {/* Pulsante che apre la finestra */}
       <Button
         variant="outline-primary"
         size="sm"
@@ -41,7 +37,6 @@ function InviaEmailModal ({ clienteid}) {
         Invia email
       </Button>
 
-      {/* La finestra modale con il form */}
       <Modal show={aperto} onHide={() => setAperto(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Invia email al contatto</Modal.Title>
@@ -85,4 +80,4 @@ function InviaEmailModal ({ clienteid}) {
   );
 }
 
-export default InviaEmailModal
+export default InviaEmailModal;

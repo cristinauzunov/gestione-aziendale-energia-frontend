@@ -16,6 +16,9 @@ function NavbarApp() {
           <Nav.Link as={Link} to="/fatture">
             Fatture
           </Nav.Link>
+          <Nav.Link as={Link} to="/utenti">
+            Utenti
+          </Nav.Link>
         </Nav>
       </Container>
     </Navbar>

@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { Card, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
 import { chiamataApi } from "../api/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
 import InviaEmailModal from "../components/InviaEmailModal.jsx";
 
 function ClientiPage() {
+  const { token } = useAuth();
+
   const [clienti, setClienti] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [totalePagine, setTotalePagine] = useState(0);
@@ -30,13 +33,18 @@ function ClientiPage() {
       if (minFatturato) params.append("minFatturato", minFatturato);
       if (maxFatturato) params.append("maxFatturato", maxFatturato);
       if (dataInserimento) params.append("dataInserimento", dataInserimento);
-      if (dataUltimoContatto) params.append("dataUltimoContatto", dataUltimoContatto);
+      if (dataUltimoContatto)
+        params.append("dataUltimoContatto", dataUltimoContatto);
 
-      const dati = await chiamataApi("/clienti?" + params.toString());
+      const dati = await chiamataApi("/clienti?" + params.toString(), {
+        token,
+      });
       setClienti(dati.content);
       setTotalePagine(dati.totalPages);
     } catch (err) {
-      setErrore("Impossibile caricare i clienti. Controlla che il backend sia avviato.");
+      setErrore(
+        "Impossibile caricare i clienti. Controlla di aver effettuato il login.",
+      );
     } finally {
       setCaricamento(false);
     }
@@ -62,11 +70,13 @@ function ClientiPage() {
   }
 
   async function eliminaCliente(id) {
-    const conferma = window.confirm("Sei sicura di voler eliminare questo cliente?");
+    const conferma = window.confirm(
+      "Sei sicura di voler eliminare questo cliente?",
+    );
     if (!conferma) return;
 
     try {
-      await chiamataApi("/clienti/" + id, { metodo: "DELETE" });
+      await chiamataApi("/clienti/" + id, { metodo: "DELETE", token });
       caricaClienti(pagina);
     } catch (err) {
       setErrore("Impossibile eliminare il cliente.");
@@ -122,7 +132,10 @@ function ClientiPage() {
           </Col>
           <Col md={4}>
             <Form.Label>Ordina per</Form.Label>
-            <Form.Select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <Form.Select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
               <option value="ragioneSociale">Nome</option>
               <option value="fatturatoAnnuale">Fatturato annuale</option>
               <option value="dataInserimento">Data inserimento</option>
@@ -150,7 +163,6 @@ function ClientiPage() {
             <Alert variant="info">Nessun cliente trovato.</Alert>
           ) : (
             <>
-              {/* Griglia di card: 1 colonna su mobile, 2 su tablet, 3 su desktop */}
               <Row xs={1} md={2} lg={3} className="g-4">
                 {clienti.map((cliente) => (
                   <Col key={cliente.id}>
@@ -169,10 +181,10 @@ function ClientiPage() {
                         <Card.Text as="div">
                           <div>{cliente.email}</div>
                           <div>
-                            <strong>Fatturato:</strong> € {cliente.fatturatoAnnuale}
+                            <strong>Fatturato:</strong> €{" "}
+                            {cliente.fatturatoAnnuale}
                           </div>
                         </Card.Text>
-                        {/* mt-auto spinge il pulsante in fondo alla card */}
                         <div className="mt-auto d-flex gap-2">
                           <InviaEmailModal clienteId={cliente.id} />
                           <Button
