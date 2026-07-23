@@ -64,6 +64,19 @@ function FatturePage() {
     setPagina(0);
   }
 
+  // Elimina una fattura dopo conferma, poi ricarica la lista
+  async function eliminaFattura(id) {
+    const conferma = window.confirm("Vuoi eliminare questa fattura?");
+    if (!conferma) return;
+
+    try {
+      await chiamataApi("/fatture/" + id, { metodo: "DELETE", token });
+      caricaFatture(pagina);
+    } catch (err) {
+      setErrore("Impossibile eliminare la fattura.");
+    }
+  }
+
   return (
     <div className="container mt-4">
       <h2 className="mb-4">Fatture</h2>
@@ -93,7 +106,7 @@ function FatturePage() {
               type="number"
               value={anno}
               onChange={(e) => setAnno(e.target.value)}
-              placeholder="Es. 2025"
+              placeholder="Es. 2026"
             />
           </Col>
           <Col md={4}>
@@ -141,6 +154,7 @@ function FatturePage() {
                     <th>Importo</th>
                     <th>Cliente</th>
                     <th>Stato</th>
+                    <th>Azioni</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -151,6 +165,15 @@ function FatturePage() {
                       <td>€ {fattura.importo}</td>
                       <td>{fattura.cliente.ragioneSociale}</td>
                       <td>{fattura.statoFattura.nome}</td>
+                      <td>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => eliminaFattura(fattura.id)}
+                        >
+                          Elimina
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

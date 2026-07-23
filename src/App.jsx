@@ -4,6 +4,7 @@ import ClientiPage from "./pages/ClientiPage.jsx";
 import FatturePage from "./pages/FatturePage.jsx";
 import NavbarApp from "./components/NavbarApp.jsx";
 import UtentiPage from "./pages/UtentiPage.jsx";
+import StatiFatturaPage from "./pages/StatiFatturaPage.jsx";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/clienti" element={<ClientiPage />} />
         <Route path="/fatture" element={<FatturePage />} />
         <Route path="/utenti" element={<UtentiPage />} />
+        <Route path="/stati-fattura" element={<StatiFatturaPage />} />
       </Routes>
     </>
   );
