@@ -1,9 +1,20 @@
 import { useState, useEffect } from "react";
-import { Card, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
+import {
+  Card,
+  Button,
+  Spinner,
+  Alert,
+  Form,
+  Row,
+  Col,
+  Dropdown,
+} from "react-bootstrap";
+import { Link } from "react-router-dom";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import InviaEmailModal from "../components/InviaEmailModal.jsx";
 import DettaglioClienteModal from "../components/DettaglioClienteModal.jsx";
+import ClienteModal from "../components/ClienteModal.jsx";
 
 function ClientiPage() {
   const { token } = useAuth();
@@ -86,7 +97,10 @@ function ClientiPage() {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Clienti</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">Clienti</h2>
+        <ClienteModal onSalvato={() => caricaClienti(pagina)} />
+      </div>
 
       <Form className="mb-4 p-3 border rounded bg-light">
         <Row className="g-3">
@@ -186,17 +200,38 @@ function ClientiPage() {
                             {cliente.fatturatoAnnuale}
                           </div>
                         </Card.Text>
-                        <div className="mt-auto d-flex gap-2 flex-wrap">
-                          <DettaglioClienteModal cliente={cliente} />
-                          <InviaEmailModal clienteId={cliente.id} />
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => eliminaCliente(cliente.id)}
-                          >
-                            Elimina
-                          </Button>
-                        </div>
+
+                        {/* Tutte le azioni raccolte in una tendina */}
+                        <Dropdown className="mt-auto">
+                          <Dropdown.Toggle variant="primary" size="sm">
+                            Azioni
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            <div className="px-3 py-2 d-grid gap-2">
+                              <DettaglioClienteModal cliente={cliente} />
+                              <ClienteModal
+                                cliente={cliente}
+                                onSalvato={() => caricaClienti(pagina)}
+                              />
+                              <Button
+                                as={Link}
+                                to={"/fatture?clienteId=" + cliente.id}
+                                variant="outline-success"
+                                size="sm"
+                              >
+                                Vedi fatture
+                              </Button>
+                              <InviaEmailModal clienteId={cliente.id} />
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => eliminaCliente(cliente.id)}
+                              >
+                                Elimina
+                              </Button>
+                            </div>
+                          </Dropdown.Menu>
+                        </Dropdown>
                       </Card.Body>
                     </Card>
                   </Col>

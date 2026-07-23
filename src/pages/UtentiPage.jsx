@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { Table, Button, Spinner, Alert, Badge } from "react-bootstrap";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import UtenteModal from "../components/UtenteModal.jsx";
+import RuoliUtenteModal from "../components/RuoliUtenteModal.jsx";
+import AvatarModal from "../components/AvatarModal.jsx";
 
 function UtentiPage() {
   const { token } = useAuth();
@@ -34,9 +37,24 @@ function UtentiPage() {
     caricaUtenti(pagina);
   }, [pagina]);
 
+  async function eliminaUtente(id) {
+    const conferma = window.confirm("Vuoi eliminare questo utente?");
+    if (!conferma) return;
+
+    try {
+      await chiamataApi("/utenti/" + id, { metodo: "DELETE", token });
+      caricaUtenti(pagina);
+    } catch (err) {
+      setErrore("Impossibile eliminare l'utente.");
+    }
+  }
+
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Utenti</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">Utenti</h2>
+        <UtenteModal onSalvato={() => caricaUtenti(pagina)} />
+      </div>
 
       {caricamento && <Spinner animation="border" />}
       {errore && <Alert variant="danger">{errore}</Alert>}
@@ -47,7 +65,7 @@ function UtentiPage() {
             <Alert variant="info">Nessun utente trovato.</Alert>
           ) : (
             <>
-              <Table striped bordered hover responsive align="middle">
+              <Table striped bordered hover responsive>
                 <thead>
                   <tr>
                     <th>Avatar</th>
@@ -55,6 +73,7 @@ function UtentiPage() {
                     <th>Username</th>
                     <th>Email</th>
                     <th>Ruoli</th>
+                    <th>Azioni</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -74,7 +93,6 @@ function UtentiPage() {
                       <td>{utente.username}</td>
                       <td>{utente.email}</td>
                       <td>
-                        {/* I ruoli sono una lista di oggetti con dentro il nome */}
                         {utente.ruoli.map((ruolo) => (
                           <Badge
                             bg="secondary"
@@ -84,6 +102,29 @@ function UtentiPage() {
                             {ruolo.nome}
                           </Badge>
                         ))}
+                      </td>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <UtenteModal
+                            utente={utente}
+                            onSalvato={() => caricaUtenti(pagina)}
+                          />
+                          <RuoliUtenteModal
+                            utente={utente}
+                            onSalvato={() => caricaUtenti(pagina)}
+                          />
+                          <AvatarModal
+                            utente={utente}
+                            onSalvato={() => caricaUtenti(pagina)}
+                          />
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => eliminaUtente(utente.id)}
+                          >
+                            Elimina
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -10,15 +10,17 @@ function StatiFatturaPage() {
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState(null);
 
-  // Campo del form per creare un nuovo stato
   const [nuovoNome, setNuovoNome] = useState("");
   const [esito, setEsito] = useState(null);
+
+  // Tengo traccia di quale riga sto modificando e del testo in corso
+  const [idInModifica, setIdInModifica] = useState(null);
+  const [nomeModificato, setNomeModificato] = useState("");
 
   async function caricaStati() {
     try {
       setCaricamento(true);
       setErrore(null);
-      // Ne chiedo 50 per averli tutti in una pagina sola
       const dati = await chiamataApi("/stati-fattura?page=0&size=50", {
         token,
       });
@@ -34,7 +36,6 @@ function StatiFatturaPage() {
     caricaStati();
   }, []);
 
-  // Crea un nuovo stato e ricarica la lista
   async function creaStato() {
     try {
       setEsito(null);
@@ -51,7 +52,36 @@ function StatiFatturaPage() {
     }
   }
 
-  // Elimina uno stato dopo conferma
+  // Attivo la modifica su una riga, precompilando il campo
+  function iniziaModifica(stato) {
+    setIdInModifica(stato.id);
+    setNomeModificato(stato.nome);
+    setEsito(null);
+  }
+
+  // Annullo la modifica senza salvare
+  function annullaModifica() {
+    setIdInModifica(null);
+    setNomeModificato("");
+  }
+
+  // Salvo la modifica sul backend
+  async function salvaModifica(id) {
+    try {
+      setEsito(null);
+      await chiamataApi("/stati-fattura/" + id, {
+        metodo: "PUT",
+        body: { nome: nomeModificato },
+        token: token,
+      });
+      setEsito({ tipo: "success", testo: "Stato modificato con successo!" });
+      annullaModifica();
+      caricaStati();
+    } catch (err) {
+      setEsito({ tipo: "danger", testo: "Impossibile modificare lo stato." });
+    }
+  }
+
   async function eliminaStato(id) {
     const conferma = window.confirm("Vuoi eliminare questo stato?");
     if (!conferma) return;
@@ -68,7 +98,6 @@ function StatiFatturaPage() {
     <div className="container mt-4">
       <h2 className="mb-4">Stati fattura</h2>
 
-      {/* Form per creare un nuovo stato */}
       <Form className="mb-4 p-3 border rounded bg-light">
         <Row className="g-3 align-items-end">
           <Col md={6}>
@@ -81,7 +110,11 @@ function StatiFatturaPage() {
             />
           </Col>
           <Col md={3}>
-            <Button variant="primary" onClick={creaStato} disabled={!nuovoNome}>
+            <Button
+              variant="primary"
+              onClick={creaStato}
+              disabled={nuovoNome.length < 2 || nuovoNome.length > 30}
+            >
               Aggiungi stato
             </Button>
           </Col>
@@ -112,15 +145,58 @@ function StatiFatturaPage() {
               <tbody>
                 {stati.map((stato) => (
                   <tr key={stato.id}>
-                    <td>{stato.nome}</td>
                     <td>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => eliminaStato(stato.id)}
-                      >
-                        Elimina
-                      </Button>
+                      {/* Se sto modificando questa riga mostro il campo, altrimenti il testo */}
+                      {idInModifica === stato.id ? (
+                        <Form.Control
+                          type="text"
+                          value={nomeModificato}
+                          onChange={(e) => setNomeModificato(e.target.value)}
+                        />
+                      ) : (
+                        stato.nome
+                      )}
+                    </td>
+                    <td>
+                      {idInModifica === stato.id ? (
+                        <div className="d-flex gap-2">
+                          <Button
+                            variant="success"
+                            size="sm"
+                            onClick={() => salvaModifica(stato.id)}
+                            disabled={
+                              nomeModificato.length < 2 ||
+                              nomeModificato.length > 30
+                            }
+                          >
+                            Salva
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={annullaModifica}
+                          >
+                            Annulla
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="d-flex gap-2">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => iniziaModifica(stato)}
+                          >
+                            Modifica
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => eliminaStato(stato.id)}
+                          >
+                            Elimina
+                          </Button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

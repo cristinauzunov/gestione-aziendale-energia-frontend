@@ -1,16 +1,24 @@
 import { useState, useEffect } from "react";
 import { Table, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
+import { useSearchParams } from "react-router-dom";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import FatturaModal from "../components/FatturaModal.jsx";
 
 function FatturePage() {
   const { token } = useAuth();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const clienteId = searchParams.get("clienteId");
 
   const [fatture, setFatture] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [totalePagine, setTotalePagine] = useState(0);
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState(null);
+
+  const [statiDisponibili, setStatiDisponibili] = useState([]);
+  const [esito, setEsito] = useState(null);
 
   const [stato, setStato] = useState("");
   const [data, setData] = useState("");
@@ -26,6 +34,7 @@ function FatturePage() {
       const params = new URLSearchParams();
       params.append("page", paginaDaCaricare);
       params.append("size", "10");
+      if (clienteId) params.append("clienteId", clienteId);
       if (stato) params.append("stato", stato);
       if (data) params.append("data", data);
       if (anno) params.append("anno", anno);
@@ -46,9 +55,24 @@ function FatturePage() {
     }
   }
 
+  async function caricaStati() {
+    try {
+      const dati = await chiamataApi("/stati-fattura?page=0&size=50", {
+        token,
+      });
+      setStatiDisponibili(dati.content);
+    } catch (err) {
+      // se non riesco a caricarli la tendina resta vuota, ma la pagina funziona
+    }
+  }
+
   useEffect(() => {
     caricaFatture(pagina);
-  }, [pagina]);
+  }, [pagina, clienteId]);
+
+  useEffect(() => {
+    caricaStati();
+  }, []);
 
   function applicaFiltri() {
     setPagina(0);
@@ -64,7 +88,28 @@ function FatturePage() {
     setPagina(0);
   }
 
-  // Elimina una fattura dopo conferma, poi ricarica la lista
+  // Cambio solo lo stato: la PUT vuole tutti i campi, quindi rimando gli altri invariati
+  async function cambiaStato(fattura, nuovoStatoId) {
+    try {
+      setEsito(null);
+      await chiamataApi("/fatture/" + fattura.id, {
+        metodo: "PUT",
+        body: {
+          data: fattura.data,
+          numero: fattura.numero,
+          importo: fattura.importo,
+          clienteId: fattura.cliente.id,
+          statoFatturaId: nuovoStatoId,
+        },
+        token: token,
+      });
+      setEsito({ tipo: "success", testo: "Stato della fattura aggiornato." });
+      caricaFatture(pagina);
+    } catch (err) {
+      setEsito({ tipo: "danger", testo: "Impossibile aggiornare lo stato." });
+    }
+  }
+
   async function eliminaFattura(id) {
     const conferma = window.confirm("Vuoi eliminare questa fattura?");
     if (!conferma) return;
@@ -79,7 +124,26 @@ function FatturePage() {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">Fatture</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">Fatture</h2>
+        <FatturaModal onSalvato={() => caricaFatture(pagina)} />
+      </div>
+
+      {clienteId && (
+        <Alert
+          variant="info"
+          className="d-flex justify-content-between align-items-center"
+        >
+          <span>Stai vedendo le fatture di un singolo cliente.</span>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={() => setSearchParams({})}
+          >
+            Mostra tutte
+          </Button>
+        </Alert>
+      )}
 
       <Form className="mb-4 p-3 border rounded bg-light">
         <Row className="g-3">
@@ -137,6 +201,8 @@ function FatturePage() {
         </div>
       </Form>
 
+      {esito && <Alert variant={esito.tipo}>{esito.testo}</Alert>}
+
       {caricamento && <Spinner animation="border" />}
       {errore && <Alert variant="danger">{errore}</Alert>}
 
@@ -164,15 +230,33 @@ function FatturePage() {
                       <td>{fattura.data}</td>
                       <td>€ {fattura.importo}</td>
                       <td>{fattura.cliente.ragioneSociale}</td>
-                      <td>{fattura.statoFattura.nome}</td>
                       <td>
-                        <Button
-                          variant="danger"
+                        <Form.Select
                           size="sm"
-                          onClick={() => eliminaFattura(fattura.id)}
+                          value={fattura.statoFattura.id}
+                          onChange={(e) => cambiaStato(fattura, e.target.value)}
                         >
-                          Elimina
-                        </Button>
+                          {statiDisponibili.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.nome}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </td>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <FatturaModal
+                            fattura={fattura}
+                            onSalvato={() => caricaFatture(pagina)}
+                          />
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => eliminaFattura(fattura.id)}
+                          >
+                            Elimina
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

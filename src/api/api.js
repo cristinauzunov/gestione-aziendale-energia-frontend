@@ -10,7 +10,7 @@ export function authHeaders(token) {
 }
 
 // Funzione generica per chiamare il backend.
-// endpoint: es. "/clienti"  |  opzioni: metodo, body, token
+// endpoint: es. "/clienti"    opzioni: metodo, body, token
 export async function chiamataApi(endpoint, opzioni = {}) {
   const { metodo = "GET", body = null, token = null } = opzioni;
 
@@ -29,8 +29,33 @@ export async function chiamataApi(endpoint, opzioni = {}) {
     throw new Error("Errore nella chiamata: " + risposta.status);
   }
 
-  // Alcune risposte non hanno contenuto (es. DELETE, invio email):
+  // Alcune risposte non hanno contenuto ( DELETE, invio email):
   // leggo il testo e faccio il parse solo se c'è davvero qualcosa
+  const testo = await risposta.text();
+  if (!testo) {
+    return null;
+  }
+  return JSON.parse(testo);
+}
+
+// Invio di un file: niente JSON, uso FormData.
+// non imposto il Content-Type, ci pensa il browser
+export async function inviaFile(endpoint, nomeCampo, file, token) {
+  const formData = new FormData();
+  formData.append(nomeCampo, file);
+
+  const risposta = await fetch(BASE_URL + endpoint, {
+    method: "PATCH",
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+    body: formData,
+  });
+
+  if (!risposta.ok) {
+    throw new Error("Errore nella chiamata: " + risposta.status);
+  }
+
   const testo = await risposta.text();
   if (!testo) {
     return null;
