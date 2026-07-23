@@ -3,6 +3,7 @@ import { Card, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import InviaEmailModal from "../components/InviaEmailModal.jsx";
+import DettaglioClienteModal from "../components/DettaglioClienteModal.jsx";
 
 function ClientiPage() {
   const { token } = useAuth();
@@ -185,7 +186,8 @@ function ClientiPage() {
                             {cliente.fatturatoAnnuale}
                           </div>
                         </Card.Text>
-                        <div className="mt-auto d-flex gap-2">
+                        <div className="mt-auto d-flex gap-2 flex-wrap">
+                          <DettaglioClienteModal cliente={cliente} />
                           <InviaEmailModal clienteId={cliente.id} />
                           <Button
                             variant="danger"
