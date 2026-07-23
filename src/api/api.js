@@ -29,10 +29,11 @@ export async function chiamataApi(endpoint, opzioni = {}) {
     throw new Error("Errore nella chiamata: " + risposta.status);
   }
 
-  // Se la risposta è 204  non c'è JSON da leggere
-  if (risposta.status === 204) {
+  // Alcune risposte non hanno contenuto (es. DELETE, invio email):
+  // leggo il testo e faccio il parse solo se c'è davvero qualcosa
+  const testo = await risposta.text();
+  if (!testo) {
     return null;
   }
-
-  return await risposta.json();
+  return JSON.parse(testo);
 }
