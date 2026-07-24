@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { FaEdit, FaPlus } from "react-icons/fa";
 
 // Se ricevo "fattura" sto modificando, altrimenti sto creando.
 // "onSalvato" e' la funzione da chiamare dopo il salvataggio per ricaricare la lista.
@@ -103,12 +104,14 @@ function FatturaModal({ fattura, onSalvato }) {
         <Button
           variant="outline-primary"
           size="sm"
+          title="Modifica"
           onClick={() => setAperto(true)}
         >
-          Modifica
+          <FaEdit />
         </Button>
       ) : (
         <Button variant="success" onClick={() => setAperto(true)}>
+          <FaPlus className="me-2" />
           Nuova fattura
         </Button>
       )}

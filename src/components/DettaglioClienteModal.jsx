@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Modal, Button, Row, Col } from "react-bootstrap";
+import { FaEye } from "react-icons/fa";
 
 // Riceve l'intero oggetto cliente
-function DettaglioClienteModal({ cliente }) {
+function DettaglioClienteModal({ cliente, comeLink }) {
   const [aperto, setAperto] = useState(false);
 
   function scriviIndirizzo(indirizzo) {
@@ -23,13 +24,24 @@ function DettaglioClienteModal({ cliente }) {
 
   return (
     <>
-      <Button
-        variant="outline-secondary"
-        size="sm"
-        onClick={() => setAperto(true)}
-      >
-        Dettagli
-      </Button>
+      {comeLink ? (
+        <span
+          className="text-primary fw-semibold"
+          style={{ cursor: "pointer" }}
+          onClick={() => setAperto(true)}
+        >
+          {cliente.ragioneSociale}
+        </span>
+      ) : (
+        <Button
+          variant="outline-secondary"
+          size="sm"
+          title="Dettagli"
+          onClick={() => setAperto(true)}
+        >
+          <FaEye />
+        </Button>
+      )}
 
       <Modal show={aperto} onHide={() => setAperto(false)} size="lg">
         <Modal.Header closeButton>

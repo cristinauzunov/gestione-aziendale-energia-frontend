@@ -7,9 +7,10 @@ import {
   Form,
   Row,
   Col,
-  Dropdown,
+  Badge,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { FaTrash, FaFileInvoice, FaPlus } from "react-icons/fa";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import InviaEmailModal from "../components/InviaEmailModal.jsx";
@@ -79,6 +80,14 @@ function ClientiPage() {
     setDataUltimoContatto("");
     setSortBy("ragioneSociale");
     setPagina(0);
+  }
+
+  // Colore del badge in base al tipo di cliente
+  function coloreTipo(tipo) {
+    if (tipo === "PA") return "primary";
+    if (tipo === "SRL") return "success";
+    if (tipo === "SPA") return "warning";
+    return "info";
   }
 
   async function eliminaCliente(id) {
@@ -181,57 +190,61 @@ function ClientiPage() {
               <Row xs={1} md={2} lg={3} className="g-4">
                 {clienti.map((cliente) => (
                   <Col key={cliente.id}>
-                    <Card className="h-100 shadow-sm">
+                    <Card className="h-100">
                       <Card.Img
                         variant="top"
                         src={cliente.logoAziendale}
-                        className="p-3 bg-light"
-                        style={{ height: "160px", objectFit: "contain" }}
+                        className="p-3"
+                        style={{ height: "150px", objectFit: "contain" }}
                       />
                       <Card.Body className="d-flex flex-column">
-                        <Card.Title>{cliente.ragioneSociale}</Card.Title>
-                        <Card.Subtitle className="mb-2 text-muted">
-                          P.IVA: {cliente.partitaIva}
-                        </Card.Subtitle>
-                        <Card.Text as="div">
-                          <div>{cliente.email}</div>
-                          <div>
-                            <strong>Fatturato:</strong> €{" "}
-                            {cliente.fatturatoAnnuale}
-                          </div>
-                        </Card.Text>
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <Card.Title className="mb-0">
+                            {cliente.ragioneSociale}
+                          </Card.Title>
+                          <Badge
+                            bg={coloreTipo(cliente.tipoCliente)}
+                            className="rounded-pill"
+                          >
+                            {cliente.tipoCliente}
+                          </Badge>
+                        </div>
 
-                        {/* Tutte le azioni raccolte in una tendina */}
-                        <Dropdown className="mt-auto">
-                          <Dropdown.Toggle variant="primary" size="sm">
-                            Azioni
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            <div className="px-3 py-2 d-grid gap-2">
-                              <DettaglioClienteModal cliente={cliente} />
-                              <ClienteModal
-                                cliente={cliente}
-                                onSalvato={() => caricaClienti(pagina)}
-                              />
-                              <Button
-                                as={Link}
-                                to={"/fatture?clienteId=" + cliente.id}
-                                variant="outline-success"
-                                size="sm"
-                              >
-                                Vedi fatture
-                              </Button>
-                              <InviaEmailModal clienteId={cliente.id} />
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={() => eliminaCliente(cliente.id)}
-                              >
-                                Elimina
-                              </Button>
-                            </div>
-                          </Dropdown.Menu>
-                        </Dropdown>
+                        <div className="text-muted small mb-3">
+                          <div>P.IVA {cliente.partitaIva}</div>
+                          <div>{cliente.email}</div>
+                        </div>
+
+                        <div className="fs-5 fw-semibold mb-3">
+                          € {cliente.fatturatoAnnuale}
+                        </div>
+
+                        {/* Azioni in fila, solo icone */}
+                        <div className="mt-auto d-flex gap-2">
+                          <DettaglioClienteModal cliente={cliente} />
+                          <ClienteModal
+                            cliente={cliente}
+                            onSalvato={() => caricaClienti(pagina)}
+                          />
+                          <Button
+                            as={Link}
+                            to={"/fatture?clienteId=" + cliente.id}
+                            variant="outline-success"
+                            size="sm"
+                            title="Vedi fatture"
+                          >
+                            <FaFileInvoice />
+                          </Button>
+                          <InviaEmailModal clienteId={cliente.id} />
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            title="Elimina"
+                            onClick={() => eliminaCliente(cliente.id)}
+                          >
+                            <FaTrash />
+                          </Button>
+                        </div>
                       </Card.Body>
                     </Card>
                   </Col>

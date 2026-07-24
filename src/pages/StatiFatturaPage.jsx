@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { Table, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
+import {
+  Table,
+  Button,
+  Spinner,
+  Alert,
+  Form,
+  Row,
+  Col,
+  Badge,
+} from "react-bootstrap";
+import { FaTrash, FaEdit, FaPlus, FaCheck, FaTimes } from "react-icons/fa";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -13,7 +23,6 @@ function StatiFatturaPage() {
   const [nuovoNome, setNuovoNome] = useState("");
   const [esito, setEsito] = useState(null);
 
-  // Tengo traccia di quale riga sto modificando e del testo in corso
   const [idInModifica, setIdInModifica] = useState(null);
   const [nomeModificato, setNomeModificato] = useState("");
 
@@ -36,6 +45,14 @@ function StatiFatturaPage() {
     caricaStati();
   }, []);
 
+  // Stesso schema di colori usato nella tabella fatture
+  function coloreStato(nomeStato) {
+    if (nomeStato === "PAGATA") return "success";
+    if (nomeStato === "NON PAGATA" || nomeStato === "SCADUTA") return "danger";
+    if (nomeStato === "EMESSA") return "primary";
+    return "warning";
+  }
+
   async function creaStato() {
     try {
       setEsito(null);
@@ -52,20 +69,17 @@ function StatiFatturaPage() {
     }
   }
 
-  // Attivo la modifica su una riga, precompilando il campo
   function iniziaModifica(stato) {
     setIdInModifica(stato.id);
     setNomeModificato(stato.nome);
     setEsito(null);
   }
 
-  // Annullo la modifica senza salvare
   function annullaModifica() {
     setIdInModifica(null);
     setNomeModificato("");
   }
 
-  // Salvo la modifica sul backend
   async function salvaModifica(id) {
     try {
       setEsito(null);
@@ -111,10 +125,11 @@ function StatiFatturaPage() {
           </Col>
           <Col md={3}>
             <Button
-              variant="primary"
+              variant="success"
               onClick={creaStato}
               disabled={nuovoNome.length < 2 || nuovoNome.length > 30}
             >
+              <FaPlus className="me-2" />
               Aggiungi stato
             </Button>
           </Col>
@@ -135,68 +150,80 @@ function StatiFatturaPage() {
           {stati.length === 0 ? (
             <Alert variant="info">Nessuno stato trovato.</Alert>
           ) : (
-            <Table striped bordered hover responsive>
+            <Table hover responsive className="align-middle">
               <thead>
                 <tr>
                   <th>Nome</th>
-                  <th>Azioni</th>
+                  <th className="text-center">Azioni</th>
                 </tr>
               </thead>
               <tbody>
                 {stati.map((stato) => (
                   <tr key={stato.id}>
                     <td>
-                      {/* Se sto modificando questa riga mostro il campo, altrimenti il testo */}
                       {idInModifica === stato.id ? (
                         <Form.Control
                           type="text"
+                          size="sm"
+                          style={{ maxWidth: "300px" }}
                           value={nomeModificato}
                           onChange={(e) => setNomeModificato(e.target.value)}
                         />
                       ) : (
-                        stato.nome
+                        <Badge
+                          bg={coloreStato(stato.nome)}
+                          className="rounded-pill"
+                        >
+                          {stato.nome}
+                        </Badge>
                       )}
                     </td>
                     <td>
-                      {idInModifica === stato.id ? (
-                        <div className="d-flex gap-2">
-                          <Button
-                            variant="success"
-                            size="sm"
-                            onClick={() => salvaModifica(stato.id)}
-                            disabled={
-                              nomeModificato.length < 2 ||
-                              nomeModificato.length > 30
-                            }
-                          >
-                            Salva
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={annullaModifica}
-                          >
-                            Annulla
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="d-flex gap-2">
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            onClick={() => iniziaModifica(stato)}
-                          >
-                            Modifica
-                          </Button>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => eliminaStato(stato.id)}
-                          >
-                            Elimina
-                          </Button>
-                        </div>
-                      )}
+                      <div className="d-flex gap-2 justify-content-center">
+                        {idInModifica === stato.id ? (
+                          <>
+                            <Button
+                              variant="outline-success"
+                              size="sm"
+                              title="Salva"
+                              onClick={() => salvaModifica(stato.id)}
+                              disabled={
+                                nomeModificato.length < 2 ||
+                                nomeModificato.length > 30
+                              }
+                            >
+                              <FaCheck />
+                            </Button>
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              title="Annulla"
+                              onClick={annullaModifica}
+                            >
+                              <FaTimes />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              title="Modifica"
+                              onClick={() => iniziaModifica(stato)}
+                            >
+                              <FaEdit />
+                            </Button>
+                            <Button
+                              variant="outline-danger"
+                              size="sm"
+                              title="Elimina"
+                              onClick={() => eliminaStato(stato.id)}
+                            >
+                              <FaTrash />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

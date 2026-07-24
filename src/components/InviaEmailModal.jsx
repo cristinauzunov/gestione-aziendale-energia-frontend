@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { FaEnvelope } from "react-icons/fa";
 
 function InviaEmailModal({ clienteId }) {
   const { token } = useAuth();
@@ -32,9 +33,10 @@ function InviaEmailModal({ clienteId }) {
       <Button
         variant="outline-primary"
         size="sm"
+        title="Invia email"
         onClick={() => setAperto(true)}
       >
-        Invia email
+        <FaEnvelope />
       </Button>
 
       <Modal show={aperto} onHide={() => setAperto(false)}>

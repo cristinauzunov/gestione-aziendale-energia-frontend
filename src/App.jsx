@@ -5,6 +5,7 @@ import FatturePage from "./pages/FatturePage.jsx";
 import NavbarApp from "./components/NavbarApp.jsx";
 import UtentiPage from "./pages/UtentiPage.jsx";
 import StatiFatturaPage from "./pages/StatiFatturaPage.jsx";
+import DashboardPage from "./pages/DashboardPage.jsx";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/fatture" element={<FatturePage />} />
         <Route path="/utenti" element={<UtentiPage />} />
         <Route path="/stati-fattura" element={<StatiFatturaPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
       </Routes>
     </>
   );

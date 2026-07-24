@@ -1,9 +1,20 @@
 import { useState, useEffect } from "react";
-import { Table, Button, Spinner, Alert, Form, Row, Col } from "react-bootstrap";
+import {
+  Table,
+  Button,
+  Spinner,
+  Alert,
+  Form,
+  Row,
+  Col,
+  Badge,
+} from "react-bootstrap";
 import { useSearchParams } from "react-router-dom";
+import { FaTrash, FaPlus } from "react-icons/fa";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import FatturaModal from "../components/FatturaModal.jsx";
+import DettaglioClienteModal from "../components/DettaglioClienteModal.jsx";
 
 function FatturePage() {
   const { token } = useAuth();
@@ -62,7 +73,7 @@ function FatturePage() {
       });
       setStatiDisponibili(dati.content);
     } catch (err) {
-      // se non riesco a caricarli la tendina resta vuota, ma la pagina funziona
+      // se non riesco a caricarli la tendina resta vuota
     }
   }
 
@@ -88,7 +99,14 @@ function FatturePage() {
     setPagina(0);
   }
 
-  // Cambio solo lo stato: la PUT vuole tutti i campi, quindi rimando gli altri invariati
+  // Scelgo il colore del badge in base al nome dello stato
+  function coloreStato(nomeStato) {
+    if (nomeStato === "PAGATA") return "success";
+    if (nomeStato === "NON PAGATA" || nomeStato === "SCADUTA") return "danger";
+    if (nomeStato === "EMESSA") return "primary";
+    return "warning";
+  }
+
   async function cambiaStato(fattura, nuovoStatoId) {
     try {
       setEsito(null);
@@ -212,7 +230,7 @@ function FatturePage() {
             <Alert variant="info">Nessuna fattura trovata.</Alert>
           ) : (
             <>
-              <Table striped bordered hover responsive>
+              <Table hover responsive className="align-middle">
                 <thead>
                   <tr>
                     <th>Numero</th>
@@ -220,41 +238,59 @@ function FatturePage() {
                     <th>Importo</th>
                     <th>Cliente</th>
                     <th>Stato</th>
-                    <th>Azioni</th>
+                    <th className="text-center">Azioni</th>
                   </tr>
                 </thead>
                 <tbody>
                   {fatture.map((fattura) => (
                     <tr key={fattura.id}>
-                      <td>{fattura.numero}</td>
+                      <td className="fw-semibold">{fattura.numero}</td>
                       <td>{fattura.data}</td>
                       <td>€ {fattura.importo}</td>
-                      <td>{fattura.cliente.ragioneSociale}</td>
                       <td>
-                        <Form.Select
-                          size="sm"
-                          value={fattura.statoFattura.id}
-                          onChange={(e) => cambiaStato(fattura, e.target.value)}
-                        >
-                          {statiDisponibili.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.nome}
-                            </option>
-                          ))}
-                        </Form.Select>
+                        <DettaglioClienteModal
+                          cliente={fattura.cliente}
+                          comeLink={true}
+                        />
                       </td>
                       <td>
-                        <div className="d-flex gap-2">
+                        {/* Badge colorato + tendina per cambiare lo stato */}
+                        <div className="d-flex align-items-center gap-2">
+                          <Badge
+                            bg={coloreStato(fattura.statoFattura.nome)}
+                            className="rounded-pill"
+                          >
+                            {fattura.statoFattura.nome}
+                          </Badge>
+                          <Form.Select
+                            size="sm"
+                            style={{ width: "auto" }}
+                            value={fattura.statoFattura.id}
+                            onChange={(e) =>
+                              cambiaStato(fattura, e.target.value)
+                            }
+                          >
+                            {statiDisponibili.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.nome}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="d-flex gap-2 justify-content-center">
                           <FatturaModal
                             fattura={fattura}
                             onSalvato={() => caricaFatture(pagina)}
                           />
                           <Button
-                            variant="danger"
+                            variant="outline-danger"
                             size="sm"
+                            title="Elimina"
                             onClick={() => eliminaFattura(fattura.id)}
                           >
-                            Elimina
+                            <FaTrash />
                           </Button>
                         </div>
                       </td>
@@ -263,7 +299,7 @@ function FatturePage() {
                 </tbody>
               </Table>
 
-              <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex justify-content-between align-items-center mt-3">
                 <Button
                   variant="secondary"
                   disabled={pagina === 0}

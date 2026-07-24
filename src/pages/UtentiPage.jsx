@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Table, Button, Spinner, Alert, Badge } from "react-bootstrap";
+import { FaTrash } from "react-icons/fa";
 import { chiamataApi } from "../api/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import UtenteModal from "../components/UtenteModal.jsx";
@@ -37,6 +38,17 @@ function UtentiPage() {
     caricaUtenti(pagina);
   }, [pagina]);
 
+  // Gli admin li evidenzio con un colore diverso
+  function coloreRuolo(nomeRuolo) {
+    if (nomeRuolo === "ROLE_ADMIN") return "danger";
+    return "secondary";
+  }
+
+  // Tolgo il prefisso ROLE_ per far vedere solo ADMIN o USER
+  function nomeRuoloPulito(nomeRuolo) {
+    return nomeRuolo.replace("ROLE_", "");
+  }
+
   async function eliminaUtente(id) {
     const conferma = window.confirm("Vuoi eliminare questo utente?");
     if (!conferma) return;
@@ -65,46 +77,48 @@ function UtentiPage() {
             <Alert variant="info">Nessun utente trovato.</Alert>
           ) : (
             <>
-              <Table striped bordered hover responsive>
+              <Table hover responsive className="align-middle">
                 <thead>
                   <tr>
-                    <th>Avatar</th>
-                    <th>Nome</th>
+                    <th>Utente</th>
                     <th>Username</th>
                     <th>Email</th>
                     <th>Ruoli</th>
-                    <th>Azioni</th>
+                    <th className="text-center">Azioni</th>
                   </tr>
                 </thead>
                 <tbody>
                   {utenti.map((utente) => (
                     <tr key={utente.id}>
+                      {/* Avatar e nome insieme, come nel mockup */}
                       <td>
-                        <img
-                          src={utente.avatar}
-                          alt={utente.username}
-                          className="rounded-circle"
-                          style={{ width: "40px", height: "40px" }}
-                        />
+                        <div className="d-flex align-items-center gap-3">
+                          <img
+                            src={utente.avatar}
+                            alt={utente.username}
+                            className="rounded-circle"
+                            style={{ width: "40px", height: "40px" }}
+                          />
+                          <span className="fw-semibold">
+                            {utente.nome} {utente.cognome}
+                          </span>
+                        </div>
                       </td>
-                      <td>
-                        {utente.nome} {utente.cognome}
-                      </td>
-                      <td>{utente.username}</td>
-                      <td>{utente.email}</td>
+                      <td className="text-muted">{utente.username}</td>
+                      <td className="text-muted">{utente.email}</td>
                       <td>
                         {utente.ruoli.map((ruolo) => (
                           <Badge
-                            bg="secondary"
-                            className="me-1"
+                            bg={coloreRuolo(ruolo.nome)}
+                            className="me-1 rounded-pill"
                             key={ruolo.nome}
                           >
-                            {ruolo.nome}
+                            {nomeRuoloPulito(ruolo.nome)}
                           </Badge>
                         ))}
                       </td>
                       <td>
-                        <div className="d-flex gap-2">
+                        <div className="d-flex gap-2 justify-content-center">
                           <UtenteModal
                             utente={utente}
                             onSalvato={() => caricaUtenti(pagina)}
@@ -118,11 +132,12 @@ function UtentiPage() {
                             onSalvato={() => caricaUtenti(pagina)}
                           />
                           <Button
-                            variant="danger"
+                            variant="outline-danger"
                             size="sm"
+                            title="Elimina"
                             onClick={() => eliminaUtente(utente.id)}
                           >
-                            Elimina
+                            <FaTrash />
                           </Button>
                         </div>
                       </td>
@@ -131,7 +146,7 @@ function UtentiPage() {
                 </tbody>
               </Table>
 
-              <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex justify-content-between align-items-center mt-3">
                 <Button
                   variant="secondary"
                   disabled={pagina === 0}

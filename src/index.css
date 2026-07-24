@@ -1,0 +1,59 @@
+/* Evidenzio i link della navbar al passaggio del mouse */
+.navbar .nav-link,
+.navbar .dropdown-toggle {
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem !important;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.navbar .nav-link:hover,
+.navbar .dropdown-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff !important;
+}
+
+/* Voci dentro la tendina */
+.dropdown-item {
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(55, 141, 252, 0.12);
+}
+
+/* Azzurro-grigio freddo, discreto */
+body {
+  background-color: #eaeef2;
+}
+
+/* Pagina di login: sfondo sfumato a tutta altezza */
+.pagina-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #2c3e50, #4a6fa5);
+}
+
+.scheda-login {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Cerchio con il fulmine sopra il titolo */
+.cerchio-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2c3e50, #4a6fa5);
+  color: #fff;
+}
+
+/* Navbar con la stessa sfumatura del login */
+.navbar-epic {
+  background: linear-gradient(135deg, #2c3e50, #4a6fa5);
+}
